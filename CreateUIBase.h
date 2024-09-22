@@ -68,6 +68,27 @@ static WidgetType toWidgetType(const QString& type)
     else return Null;
 }
 
+inline void setDeafultVal(const WidgetInfo &winfo, const QJsonObject &obj)
+{
+    switch(winfo.type)
+    {
+    case SpinBox:
+    {
+        auto spin = static_cast<QSpinBox*>(winfo.widget);
+        spin->setValue(obj["default"].toInt());
+    }
+    break;
+    case DoubleSpinBox:
+    {
+        auto dSpin = static_cast<QDoubleSpinBox*>(winfo.widget);
+        dSpin->setValue(obj["default"].toDouble());
+    }
+    break;
+    default:
+        break;
+    }
+}
+
 static WidgetInfo createrWidgetInfo(const QJsonObject object, QWidget *parent)
 {
     auto name = object["name"].toString();

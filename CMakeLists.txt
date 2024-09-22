@@ -13,6 +13,8 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Charts)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Charts)
 
+add_definitions(-DSOURCE_DIR=\"${CMAKE_SOURCE_DIR}\")
+
 set(PROJECT_SOURCES
         main.cpp
         WaveformsWidget.cpp

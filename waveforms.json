@@ -1,0 +1,134 @@
+{
+    "sinwave":{
+        "waveName":"正弦波",
+        "params":[
+            {
+                "key":"Frequency",
+                "name":"频率",
+                "type": "SpinBox",
+                "ranges" : [0,100],
+                "unit":"Hz",
+                "default" : 5
+            },
+            {
+                "key":"Amplitude",
+                "name": "幅度",
+                "type": "DoubleSpinBox",
+                "unit":"V",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"cycle",
+                "name":"周期",
+                "type" : "SpinBox",
+                "ranges" : [0,100],
+                "default":3
+            }
+        ]
+    },
+    "squarewave":{
+        "waveName":"方波",
+        "params":[
+            {
+                "key":"Frequency",
+                "name":"频率",
+                "type": "SpinBox",
+                "unit":"Hz",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"Amplitude",
+                "name": "幅度",
+                "type": "DoubleSpinBox",
+                "unit":"V",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"cycle",
+                "name":"周期",
+                "type" : "SpinBox",
+                "ranges" : [0,100],
+                "default":3
+            }
+        ]
+    },
+    "trainglewave":{
+        "waveName":"三角波",
+        "params":[
+            {
+                "key":"Frequency",
+                "name":"频率",
+                "type": "SpinBox",
+                "unit":"Hz",
+                "ranges":[0,100],
+                "default" : 5
+            },
+            {
+                "key":"Amplitude",
+                "name": "幅度",
+                "type": "DoubleSpinBox",
+                "unit":"V",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"cycle",
+                "name":"周期",
+                "type" : "SpinBox",
+                "ranges" : [0,100],
+                "default":3
+            }
+        ]
+    },    
+    "sawtoothwave":{
+        "waveName":"锯齿波",
+        "params":[
+            {
+                "key":"Frequency",
+                "name":"频率",
+                "type": "SpinBox",
+                "unit":"Hz",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"Amplitude",
+                "name": "幅度",
+                "type": "DoubleSpinBox",
+                "unit":"V",
+                "ranges" : [0,100],
+                "default" : 5
+            },
+            {
+                "key":"cycle",
+                "name":"周期",
+                "type" : "SpinBox",
+                "ranges" : [0,100],
+                "default":3
+            }
+        ]
+    },
+    "DC":{
+        "waveName": "直流电",
+        "params" : [
+            {
+                "key":"Voltage",
+                "name":"电压",
+                "type":"DoubleSpinBox",
+                "unit":"V",
+                "ranges":[0,100],
+                "default": 5
+            },
+            {
+                "key":"persist",
+                "name":"持续时间",
+                "type":"SpinBox",
+                "ranges":[0,100],
+                "default":4
+            }
+        ]
+    }
+}

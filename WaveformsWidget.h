@@ -22,6 +22,7 @@ QT_END_NAMESPACE
 
 using WidgetListInfo = QList<WidgetInfo>;
 using SearchValByName = double(*)(const WidgetListInfo &wlist, const QString &widetName);
+using yAxisCal = std::function<double(double,double,double)>;
 
 enum WaveEnum{
     DC = 0,
@@ -58,8 +59,10 @@ private:
     QList<QPointF> sawtoothWaveform();
     QList<QPointF> traingleWaveform();
     QList<QPointF> straightLine();
+    QList<QPointF> genWavePoints(const QString &waveName, yAxisCal);
 
     void updateXyRange(const QList<QPointF> &list);
+    void hideAllMakers();
 
 public slots:
     void onWaveChanged(int index);

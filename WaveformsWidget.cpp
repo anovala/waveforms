@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QSplineSeries>
 #include <QValueAxis>
+#include <QLegendMarker>
 
 WaveformsWidget::WaveformsWidget(QWidget *parent)
     : QWidget(parent)
@@ -15,20 +16,14 @@ WaveformsWidget::WaveformsWidget(QWidget *parent)
     , m_yAxis(nullptr)
 {
     ui->setupUi(this);
-
     clear();
-    initFromJson("./waveforms.json");
+    QString sourceDir = QStringLiteral(SOURCE_DIR);
+    initFromJson(sourceDir+ "/" + "/waveforms.json");
     connect(ui->waveformsBox,&QComboBox::currentIndexChanged,this,&WaveformsWidget::onWaveChanged);
     connect(ui->addBtn,&QPushButton::clicked,this,[this](){
         auto index = ui->waveformsBox->currentIndex();
         onAddWaveform(index);
     });
-
-    // auto lines = new QLineSeries();
-    // lines->append(0,1);
-    // lines->append(1,1);
-    // m_chart.addSeries(lines);
-    // m_chart.createDefaultAxes();
 
     m_xAxis = new QValueAxis();
     m_xAxis->setTitleText("Time (s)");
@@ -58,6 +53,8 @@ WaveformsWidget::WaveformsWidget(QWidget *parent)
         }
         return 0;
     };
+
+    this->resize(800,600);
 }
 
 WaveformsWidget::~WaveformsWidget()
@@ -103,6 +100,7 @@ void WaveformsWidget::addWaveItem(const QString &name, const QJsonObject &obj)
         auto label = new QLabel(labelName,this);
         gridLayout->addWidget(label,i,0);
         auto widgetInfo = createrWidgetInfo(obj,this);
+        setDeafultVal(widgetInfo,obj);
         gridLayout->addWidget(widgetInfo.widget,i,1);
         wList.append(widgetInfo);
     }
@@ -115,136 +113,78 @@ void WaveformsWidget::addWaveItem(const QString &name, const QJsonObject &obj)
 void WaveformsWidget::addLine(const QList<QPointF> &list)
 {
     auto lines = new QLineSeries();
-    lines->setColor("yellow");
+    lines->setColor(QColor(0xff,0xba,0x14));
     lines->append(list);
     m_chart.addSeries(lines);
     lines->attachAxis(m_xAxis);
     lines->attachAxis(m_yAxis);
 
     updateXyRange(list);
+    hideAllMakers();
 }
 
 void WaveformsWidget::addSpLine(const QList<QPointF> &list)
 {
     auto spLines = new QSplineSeries();
-    spLines->setColor("yellow");
+    spLines->setColor(QColor(0xff,0xba,0x14));
     spLines->append(list);
     m_chart.addSeries(spLines);
     spLines->attachAxis(m_xAxis);
     spLines->attachAxis(m_yAxis);
 
     updateXyRange(list);
+    hideAllMakers();
 }
 
 QList<QPointF> WaveformsWidget::sinWaveform()
 {
-    auto wlist = m_wavesInfo.at("sinwave");
-    auto freq = search(wlist,FREQ);
-    auto amp = search(wlist,AMP);
-    auto cycles = search(wlist,CYCLE);
-    int nums = 100;
+    yAxisCal func =
+        [](double amp, double freq, double t) -> double{
+            double ret = amp * std::sin(2 * M_PI *freq * t);
+            return ret;
+        };
 
-    QList<QPointF> points;
-    points.append(m_stopPoint);
-    double elaspedTime = m_stopPoint.x();
-
-    double T = 1.0/freq;
-    double totalTime = cycles * T;
-    double dt = totalTime/nums;
-
-    for(int i = 0; i <= nums; ++i)
-    {
-        //current time
-        double t = elaspedTime+ i * dt;
-        double y = amp * std::sin(2 * M_PI *freq * t);
-
-        points.append({t,y});
-    }
-    m_stopPoint = points.last();
+    auto points = genWavePoints("sinwave",func);
 
     return points;
 }
 
 QList<QPointF> WaveformsWidget::squareWaveform()
 {
-    auto wlist = m_wavesInfo.at("squarewave");
-    auto freq = search(wlist,FREQ);
-    auto amp = search(wlist,AMP);
-    auto cycles = search(wlist,CYCLE);
-    int nums = 100;
-
-    QList<QPointF> points;
-    points.append(m_stopPoint);
-    double elaspedTime = m_stopPoint.x();
-
-    double T = 1.0/freq;
-    double totalTime = cycles * T;
-    double dt = totalTime/nums;
-
-    for(int i = 0; i < nums; ++i)
-    {
-        double t = elaspedTime + i * dt;
+    yAxisCal func =
+        [](double amp, double freq, double t) -> double {
         double y =  amp * (std::sin(2 * M_PI * freq * t) >= 0 ? 1.0 : -1.0);
-        points.append({t,y});
-    }
+        return y;
+    };
+    auto points = genWavePoints("squarewave",func);
 
-    m_stopPoint =  points.last();
     return points;
 }
 
+
 QList<QPointF> WaveformsWidget::sawtoothWaveform()
 {
-    auto wlist = m_wavesInfo.at("sawtoothwave");
-    auto freq = search(wlist,FREQ);
-    auto amp = search(wlist,AMP);
-    auto cycles = search(wlist,CYCLE);
-    int nums = 100;
-
-    QList<QPointF> points;
-    points.append(m_stopPoint);
-    double elaspedTime = m_stopPoint.x();
-
-    double T = 1.0/freq;
-    double totalTime = cycles * T;
-    double dt = totalTime/nums;
-
-    for(int i = 0; i < nums; ++i)
-    {
-        double t = elaspedTime + i * dt;
+    yAxisCal func =[](double amp, double freq, double t) -> double {
         double y = 2 * amp * (std::fmod(t * freq, 1.0)) - amp;
-        points.append({t,y});
-    }
+        return y;
+    };
 
-    m_stopPoint =  points.last();
+    auto points = genWavePoints("sawtoothwave",func);
+
     return points;
 }
 
 QList<QPointF> WaveformsWidget::traingleWaveform()
 {
-    auto wlist = m_wavesInfo.at("trainglewave");
-    auto freq = search(wlist,FREQ);
-    auto amp = search(wlist,AMP);
-    auto cycles = search(wlist,CYCLE);
-    int nums = 100;
-
-    QList<QPointF> points;
-    points.append(m_stopPoint);
-    double elaspedTime = m_stopPoint.x();
-
-    double T = 1.0/freq;
-    double totalTime = cycles * T;
-    double dt = totalTime/nums;
-
-    for(int i = 0; i < nums; ++i)
-    {
-        double t = elaspedTime + i * dt;
+    yAxisCal func = [](double amp, double freq, double t) -> double {
         double y = 2 * amp * std::abs(2 * std::fmod(t * freq, 1.0) - 1.0) - amp;
-        points.append({t,y});
-    }
+        return y;
+    };
 
-    m_stopPoint =  points.last();
+    auto points = genWavePoints("trainglewave",func);
     return points;
 }
+
 
 QList<QPointF> WaveformsWidget::straightLine()
 {
@@ -263,6 +203,33 @@ QList<QPointF> WaveformsWidget::straightLine()
         points.append({t,vol});
     }
     m_stopPoint = points.last();
+    return points;
+}
+
+QList<QPointF> WaveformsWidget::genWavePoints(const QString &waveName, yAxisCal yCalculate)
+{
+    auto wlist = m_wavesInfo.at(waveName);
+    auto freq = search(wlist,FREQ);
+    auto amp = search(wlist,AMP);
+    auto cycles = search(wlist,CYCLE);
+    int nums = 100;
+
+    QList<QPointF> points;
+    points.append(m_stopPoint);
+    double elaspedTime = m_stopPoint.x();
+
+    double T = 1.0/freq;
+    double totalTime = cycles * T;
+    double dt = totalTime/nums;
+
+    for(int i = 0; i < nums; ++i)
+    {
+        double t = elaspedTime + i * dt;
+        double y = yCalculate(amp,t,freq);
+        points.append({t,y});
+    }
+
+    m_stopPoint =  points.last();
     return points;
 }
 
@@ -296,6 +263,14 @@ void WaveformsWidget::updateXyRange(const QList<QPointF> &list)
     for(auto axis : yAxises)
     {
         axis->setRange(m_range.yMin - paddingY,m_range.yMax + paddingY);
+    }
+}
+
+void WaveformsWidget::hideAllMakers()
+{
+    for (auto marker: m_chart.legend()->markers())
+    {
+        marker->setVisible(false);
     }
 }
 
