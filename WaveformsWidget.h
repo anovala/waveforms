@@ -13,6 +13,7 @@
 #define CYCLE "周期"
 #define VOL "电压"
 #define PERSIST "持续时间"
+#define PHASE "相位"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,6 +24,7 @@ QT_END_NAMESPACE
 using WidgetListInfo = QList<WidgetInfo>;
 using SearchValByName = double(*)(const WidgetListInfo &wlist, const QString &widetName);
 using yAxisCal = std::function<double(double,double,double)>;
+using yAxisCalSine = std::function<double(double,double,double,int)>;
 
 enum WaveEnum{
     DC = 0,
@@ -38,6 +40,28 @@ struct Range{
     double yMax = 0.0;
     double yMin = 0.0;
 };
+
+
+inline void setDeafultVal(const WidgetInfo &winfo, const QJsonObject &obj)
+{
+    switch(winfo.type)
+    {
+    case SpinBox:
+    {
+        auto spin = static_cast<QSpinBox*>(winfo.widget);
+        spin->setValue(obj["default"].toInt());
+    }
+    break;
+    case DoubleSpinBox:
+    {
+        auto dSpin = static_cast<QDoubleSpinBox*>(winfo.widget);
+        dSpin->setValue(obj["default"].toDouble());
+    }
+    break;
+    default:
+        break;
+    }
+}
 
 class WaveformsWidget : public QWidget
 {
@@ -77,7 +101,8 @@ private:
     QValueAxis *m_yAxis;
 
     QPointF m_stopPoint;
-    QPointF m_startPoint;
     std::map<QString,WidgetListInfo> m_wavesInfo;
     Range m_range;
+
+    QList<QPointF> m_points;
 };

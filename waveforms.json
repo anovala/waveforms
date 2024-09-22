@@ -24,6 +24,13 @@
                 "type" : "SpinBox",
                 "ranges" : [0,100],
                 "default":3
+            },
+            {
+                "key":"phase",
+                "name":"相位",
+                "type":"SpinBox",
+                "ranges":[0,180],
+                "default":0
             }
         ]
     },

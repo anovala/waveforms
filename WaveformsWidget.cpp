@@ -20,6 +20,7 @@ WaveformsWidget::WaveformsWidget(QWidget *parent)
     QString sourceDir = QStringLiteral(SOURCE_DIR);
     initFromJson(sourceDir+ "/" + "/waveforms.json");
     connect(ui->waveformsBox,&QComboBox::currentIndexChanged,this,&WaveformsWidget::onWaveChanged);
+    connect(ui->clearBtn,&QPushButton::clicked,this,&WaveformsWidget::clear);
     connect(ui->addBtn,&QPushButton::clicked,this,[this](){
         auto index = ui->waveformsBox->currentIndex();
         onAddWaveform(index);
@@ -38,7 +39,7 @@ WaveformsWidget::WaveformsWidget(QWidget *parent)
     ui->chartView->setChart(&m_chart);
     ui->chartView->setRenderHint(QPainter::Antialiasing);
 
-    m_stopPoint = {0,0};
+    // m_stopPoint = {0,0};
     m_range = {0,0};
 
     search =  [](const WidgetListInfo &wlist, const QString &widetName) ->double{
@@ -138,14 +139,31 @@ void WaveformsWidget::addSpLine(const QList<QPointF> &list)
 
 QList<QPointF> WaveformsWidget::sinWaveform()
 {
-    yAxisCal func =
-        [](double amp, double freq, double t) -> double{
-            double ret = amp * std::sin(2 * M_PI *freq * t);
-            return ret;
-        };
+    auto wlist = m_wavesInfo.at("sinwave");
+    auto freq = search(wlist,FREQ);
+    auto amp = search(wlist,AMP);
+    auto cycles = search(wlist,CYCLE);
+    int phase = search(wlist,PHASE);
+    double radian = phase * (180/M_PI);
+    int nums = cycles * 300;
 
-    auto points = genWavePoints("sinwave",func);
+    QList<QPointF> points;
+    if(!m_stopPoint.isNull())
+        points.append(m_stopPoint);
+    double elaspedTime = m_stopPoint.x();
 
+    double T = 1.0/freq;
+    double totalTime = cycles * T;
+    double dt = totalTime/nums;
+
+    for(int i = 0; i < nums; ++i)
+    {
+        double t = elaspedTime + i * dt;
+        double y = amp * std::sin(2 * M_PI *freq * t + radian);
+        points.append({t,y});
+    }
+
+    m_stopPoint =  points.last();
     return points;
 }
 
@@ -194,7 +212,8 @@ QList<QPointF> WaveformsWidget::straightLine()
 
     int nums = 100;
     QList<QPointF> points;
-    points.append(m_stopPoint);
+    if(!m_stopPoint.isNull())
+        points.append(m_stopPoint);
     double elaspedTime = m_stopPoint.x();
     double dt = persit / nums;
 
@@ -212,10 +231,11 @@ QList<QPointF> WaveformsWidget::genWavePoints(const QString &waveName, yAxisCal 
     auto freq = search(wlist,FREQ);
     auto amp = search(wlist,AMP);
     auto cycles = search(wlist,CYCLE);
-    int nums = 100;
+    int nums = cycles * 300;
 
     QList<QPointF> points;
-    points.append(m_stopPoint);
+    if(!m_stopPoint.isNull())
+        points.append(m_stopPoint);
     double elaspedTime = m_stopPoint.x();
 
     double T = 1.0/freq;
@@ -306,15 +326,16 @@ void WaveformsWidget::onAddWaveform(int index)
         addSpLine(points);
     else
         addLine(points);
+
+    m_points.append(points);
 }
 
 void WaveformsWidget::clear()
 {
-    while(ui->stackedWidget->count() > 0)
-    {
-        auto widget = ui->stackedWidget->widget(0);
-        ui->stackedWidget->removeWidget(widget);
-        widget->deleteLater();
-    }
-
+    m_points.clear();
+    m_chart.removeAllSeries();
+    m_stopPoint = {};
+    m_range = {};
 }
+
+
